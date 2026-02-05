@@ -12,7 +12,15 @@ const EnvSchema = z.object({
 
 const env = EnvSchema.parse(process.env);
 
-const server = http.createServer();
+const server = http.createServer((req, res) => {
+  if (req.url === "/health") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: true }));
+    return;
+  }
+  res.writeHead(404);
+  res.end();
+});
 const wss = new WebSocketServer({ server });
 
 const sub = new Redis(env.REDIS_URL);
