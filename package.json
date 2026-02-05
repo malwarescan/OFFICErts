@@ -13,7 +13,7 @@
     "format": "prettier -w .",
     "seed:dev": "pnpm -C apps/api seed:dev",
     "test:smoke": "pnpm -C test tsx smoke.ts",
-    "start": "echo 'This is a monorepo. Please deploy individual services: API, Realtime, Web, or Worker' && exit 1"
+    "start": "echo 'Deploy individual services from apps/ directory' && exit 0"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
