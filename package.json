@@ -10,7 +10,9 @@
     "dev": "turbo run dev",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
-    "format": "prettier -w ."
+    "format": "prettier -w .",
+    "seed:dev": "pnpm -C apps/api seed:dev",
+    "test:smoke": "pnpm -C test tsx smoke.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

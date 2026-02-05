@@ -17,6 +17,11 @@ enum SeatType {
   AI
 }
 
+enum RoomVisibility {
+  PUBLIC
+  PRIVATE
+}
+
 model Org {
   id        String       @id @default(uuid()) @db.Uuid
   name      String
@@ -37,6 +42,7 @@ model Org {
 model User {
   id           String        @id @default(uuid()) @db.Uuid
   email        String        @unique
+  name         String
   passwordHash String
   createdAt    DateTime      @default(now())
 
@@ -60,10 +66,11 @@ model Membership {
 }
 
 model Room {
-  id        String   @id @default(uuid()) @db.Uuid
-  orgId     String   @db.Uuid
+  id        String         @id @default(uuid()) @db.Uuid
+  orgId     String         @db.Uuid
   name      String
-  createdAt DateTime @default(now())
+  visibility RoomVisibility @default(PUBLIC)
+  createdAt DateTime       @default(now())
 
   org          Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
   memberships  RoomMembership[]

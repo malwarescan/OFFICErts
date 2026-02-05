@@ -1,5 +1,13 @@
 {
   "name": "@office-rts/scripts",
   "private": true,
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@office-rts/db": "workspace:*",
+    "@office-rts/shared": "workspace:*",
+    "@prisma/client": "^6.1.0",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2"
+  }
 }
