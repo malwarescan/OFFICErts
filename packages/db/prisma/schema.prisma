@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OutputStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+}
+
+enum SeatType {
+  AI
+}
+
+model Org {
+  id        String       @id @default(uuid()) @db.Uuid
+  name      String
+  createdAt DateTime     @default(now())
+
+  users       Membership[]
+  roomMemberships RoomMembership[]
+  rooms       Room[]
+  messages    Message[]
+  seats       Seat[]
+  aiProfiles  AIProfile[]
+  seatAssignments SeatAssignment[]
+  artifacts   Artifact[]
+  outputs     Output[]
+  auditLogs   AuditLog[]
+}
+
+model User {
+  id           String        @id @default(uuid()) @db.Uuid
+  email        String        @unique
+  passwordHash String
+  createdAt    DateTime      @default(now())
+
+  memberships  Membership[]
+  roomMemberships RoomMembership[]
+  messages     Message[]
+  auditLogs    AuditLog[]
+}
+
+model Membership {
+  id        String   @id @default(uuid()) @db.Uuid
+  orgId     String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  org  Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, userId])
+  @@index([userId])
+}
+
+model Room {
+  id        String   @id @default(uuid()) @db.Uuid
+  orgId     String   @db.Uuid
+  name      String
+  createdAt DateTime @default(now())
+
+  org          Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  memberships  RoomMembership[]
+  messages     Message[]
+  seatAssignments SeatAssignment[]
+  artifacts   Artifact[]
+  outputs     Output[]
+
+  @@index([orgId])
+}
+
+model RoomMembership {
+  id        String   @id @default(uuid()) @db.Uuid
+  orgId     String   @db.Uuid
+  roomId    String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  org  Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([orgId])
+  @@index([userId])
+}
+
+model Message {
+  id        String   @id @default(uuid()) @db.Uuid
+  orgId     String   @db.Uuid
+  roomId    String   @db.Uuid
+  body      String
+  userId    String?  @db.Uuid
+  seatId    String?  @db.Uuid
+  createdAt DateTime @default(now())
+
+  org   Org   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  room  Room  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  seat  Seat? @relation(fields: [seatId], references: [id], onDelete: SetNull)
+
+  artifacts Artifact[]
+
+  @@index([orgId, roomId, createdAt])
+  @@index([userId])
+  @@index([seatId])
+}
+
+model Seat {
+  id          String      @id @default(uuid()) @db.Uuid
+  orgId       String      @db.Uuid
+  type        SeatType
+  displayName String
+  createdAt   DateTime    @default(now())
+
+  org        Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  aiProfile  AIProfile?
+  messages   Message[]
+  assignments SeatAssignment[]
+  outputs    Output[]
+  auditLogs  AuditLog[]
+
+  @@index([orgId])
+}
+
+model AIProfile {
+  id        String   @id @default(uuid()) @db.Uuid
+  orgId     String   @db.Uuid
+  seatId    String   @unique @db.Uuid
+  template  String
+  mission   String
+  createdAt DateTime @default(now())
+
+  org  Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  seat Seat @relation(fields: [seatId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+}
+
+model SeatAssignment {
+  id        String   @id @default(uuid()) @db.Uuid
+  orgId     String   @db.Uuid
+  seatId    String   @db.Uuid
+  roomId    String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  org  Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  seat Seat @relation(fields: [seatId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([seatId, roomId])
+  @@index([orgId])
+  @@index([roomId])
+}
+
+model Artifact {
+  id              String   @id @default(uuid()) @db.Uuid
+  orgId           String   @db.Uuid
+  roomId          String   @db.Uuid
+  linkedMessageId String   @db.Uuid
+  title           String
+  bodyMd          String
+  createdAt       DateTime @default(now())
+
+  org           Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  room          Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  linkedMessage Message @relation(fields: [linkedMessageId], references: [id], onDelete: Cascade)
+
+  outputs Output[]
+
+  @@index([orgId])
+  @@index([roomId])
+  @@index([linkedMessageId])
+}
+
+model Output {
+  id             String       @id @default(uuid()) @db.Uuid
+  orgId          String       @db.Uuid
+  roomId         String       @db.Uuid
+  seatId         String       @db.Uuid
+  artifactId     String?      @db.Uuid
+  status         OutputStatus @default(PENDING)
+  intent         String
+  title          String
+  bodyMd         String
+  confidence     Float
+  sourceRefsJson Json
+  suggestedActionsJson Json
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  org      Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  room     Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  seat     Seat     @relation(fields: [seatId], references: [id], onDelete: Cascade)
+  artifact Artifact? @relation(fields: [artifactId], references: [id], onDelete: SetNull)
+
+  @@index([orgId])
+  @@index([roomId])
+  @@index([seatId])
+  @@index([artifactId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  orgId     String   @db.Uuid
+  userId    String?  @db.Uuid
+  seatId    String?  @db.Uuid
+  action    String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  org  Org   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  seat Seat? @relation(fields: [seatId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, createdAt])
+  @@index([userId])
+  @@index([seatId])
+}
