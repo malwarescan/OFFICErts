@@ -1,1 +1,1 @@
-{"build":{"builder":"NIXPACKS","buildCommand":"pnpm build"},"deploy":{"startCommand":"pnpm start","healthcheckPath":"/api/health","healthcheckTimeout":30}}
+{"build": {"builder": "NIXPACKS", "buildCommand": "pnpm build"}, "deploy": {"startCommand": "cd apps/web-v2 && pnpm start", "healthcheckPath": "/api/health", "healthcheckTimeout": 30}}
