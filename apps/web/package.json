@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "next build",
+    "build": "next build && echo \"Build completed at $(date)\"",
     "start": "next start -p ${PORT:-3000}",
     "dev": "next dev -p 3000",
     "typecheck": "tsc -p tsconfig.json --noEmit"
